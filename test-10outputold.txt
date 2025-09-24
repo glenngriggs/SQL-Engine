@@ -1,0 +1,47 @@
+% % New table alpha with column(s) id created
+% Error during CREATE: Cannot create already existing table alpha
+% New table gamma with column(s) valid score label token created
+% New table ghost with column(s) meta1 meta2 meta3 meta4 created
+% Deleted 0 rows from ghost
+% Error during INSERT: foobar does not name a table in the database
+% Error: unrecognized command
+% Error: unrecognized command
+% Error: unrecognized command
+% Error: unrecognized command
+% Error: unrecognized command
+% Error during INSERT: unknown does not name a table in the database
+% Error: unrecognized command
+% Error: unrecognized command
+% Generated bst index for table gamma on column label, with 0 distinct keys
+% Generated hash index for table gamma on column label, with 0 distinct keys
+% Added 4 rows to gamma from position 0 to 3
+% valid score label token 
+true 1.25 sensorX 100 
+false 4 sensorX 103 
+Printed 2 matching rows from gamma
+% Error during REMOVE: foobar does not name a table in the database
+% Table alpha removed
+% Error during GENERATE: alpha does not name a table in the database
+% Generated bst index for table gamma on column label, with 3 distinct keys
+% Error during PRINT: foobar does not name a table in the database
+% valid score label token 
+true 1.25 sensorX 100 
+true 3.75 sensorZ 102 
+Printed 2 matching rows from gamma
+% token score label valid 
+100 1.25 sensorX true 
+102 3.75 sensorZ true 
+Printed 2 matching rows from gamma
+% valid score label token 
+true 1.25 sensorX 100 
+false 4 sensorX 103 
+Printed 2 matching rows from gamma
+% Error during DELETE: token does not name a table in the database
+% Deleted 2 rows from gamma
+% Deleted 0 rows from gamma
+% valid score label token 
+Printed 0 matching rows from gamma
+% valid score label token 
+true 3.75 sensorZ 102 
+Printed 1 matching rows from gamma
+% Thanks for being silly!

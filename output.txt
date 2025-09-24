@@ -1,0 +1,8 @@
+% % New table sample with column(s) name age created
+% Added 3 rows to sample from position 0 to 2
+% Generated hash index for table sample on column name, with 3 distinct keys
+% Generated bst index for table sample on column age, with 3 distinct keys
+% Error during GENERATE: hash does not name a table in the database
+% Error during GENERATE: not_a_table does not name a table in the database
+% Table sample removed
+% Thanks for being silly!

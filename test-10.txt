@@ -1,0 +1,37 @@
+# test-22.txt
+CREATE alpha 1 int id
+CREATE alpha 1 int id  # duplicate CREATE
+CREATE gamma 4 bool double string int valid score label token
+CREATE ghost 4 string string string string meta1 meta2 meta3 meta4
+DELETE FROM ghost WHERE meta2 = z9
+INSERT INTO foobar 5 ROWS
+entry1
+entry2
+entry3
+entry4
+entry5
+INSERT INTO unknown 2 ROWS
+a1
+a2
+GENERATE FOR gamma bst INDEX ON label
+GENERATE FOR gamma hash INDEX ON label
+INSERT INTO gamma 4 ROWS
+true 1.25 sensorX 100
+false 2.50 sensorY 101
+true 3.75 sensorZ 102
+false 4.00 sensorX 103
+PRINT FROM gamma 4 valid score label token WHERE label < sensorY
+REMOVE foobar
+REMOVE alpha
+GENERATE FOR alpha hash INDEX ON id
+GENERATE FOR gamma bst INDEX ON label
+PRINT FROM foobar 4 valid score label token WHERE valid = true
+PRINT FROM gamma 4 valid score label token WHERE valid = true
+PRINT FROM gamma 4 token score label valid WHERE valid = true
+PRINT FROM gamma 4 valid score label token WHERE label = sensorX
+DELETE FROM token WHERE label = sensorX
+DELETE FROM gamma WHERE label = sensorX
+DELETE FROM gamma WHERE label = z9
+PRINT FROM gamma 4 valid score label token WHERE label = sensorX
+PRINT FROM gamma 4 valid score label token WHERE label = sensorZ
+QUIT
