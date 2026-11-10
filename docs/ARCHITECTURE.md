@@ -1,297 +1,128 @@
-# SillyQL architecture
+# Architecture
 
-This document explains how a command travels through the engine, how data is laid out, and why
-the main design decisions were made. File references are relative to the repository root.
+Notes on how the engine is put together and why some of the main decisions were made.
 
-## 1. Pipeline
+## How a Command Runs
 
 ```
- stdin ──► TokenStream ──► Parser ──────────► Command ──► Executor ──► ResultWriter ──► stdout
-        (token_stream.hpp) (parser.hpp)       (variant)   (executor.hpp) (result_writer.hpp)
-                             │ binds names        │            │
-                             ▼                    │            ▼
-                           Catalog ◄──────────────┴──────── Planner / Join / Aggregate / CSV
-                           (catalog.hpp)                   (planner.hpp, join.hpp, ...)
-
- Session (session.hpp): prompt → read keyword → [clock starts] parse → execute → (timing) → repeat
+stdin -> TokenStream -> Parser -> Command -> Executor -> ResultWriter -> stdout
+                          |                     |
+                          v                     v
+                       Catalog          Planner / Join / Aggregate / CSV loader
 ```
 
-`apps/main.cpp` only parses the command line and hands `std::cin`/`std::cout`/`std::cerr` to a
-`Session`. Everything else lives in the `sillyql` static library so it can be unit tested and
-benchmarked without a process boundary.
+`apps/main.cpp` only parses the command line flags and hands the streams to a `Session`, which runs the read/parse/execute loop. Everything else is in the `sillyql` static library so it can be unit tested and benchmarked directly.
 
-| Component | Responsibility |
-|-----------|----------------|
-| `Value` (`value.hpp`) | One typed cell: `std::variant<int32_t, double, bool, std::string>`. Equality, ordering (same type only), printing. Carries WHERE literals and MIN/MAX results; storage and indexes use raw typed vectors and keys. |
-| `Column` (`column.hpp`) | One attribute stored contiguously as a typed vector. |
-| `Table` (`table.hpp`) | Schema, one `Column` per attribute, row count, and an optional `std::unique_ptr<Index>`. |
-| `Index`, `PostingsIndex<Map>`, `HashIndex<K>`, `OrderedIndex<K>` | Secondary indexes behind an abstract interface; shared maintenance in `PostingsIndex`. |
-| `Catalog` | Tables by name. |
-| `TokenStream` (`token_stream.hpp`) | Whitespace tokens from an `std::istream`, plus the two line-oriented operations the language needs. |
-| `Parser` | Turns tokens into a bound `Command` (a `std::variant` of command structs). |
-| `Planner` (`planner.hpp`) | Picks an access path for a predicate and a join strategy; produces EXPLAIN text. |
-| `scan.hpp`, `join.hpp`, `aggregate.hpp`, `csv_loader.hpp` | Execution kernels. |
-| `Executor` | Runs a command against the catalog and reports through the `ResultWriter`. |
-| `ResultWriter` | Output formatting and the trailing-space convention; enforces quiet mode (row cells are no-ops). |
-| `Session` | The REPL loop, error recovery and per-command timing. |
+| Class | What it does |
+|---|---|
+| `Value` | One typed value, a `std::variant<int32_t, double, bool, std::string>` |
+| `Column` | One column of a table stored as a typed vector |
+| `Table` | Schema, one `Column` per attribute, and an optional index |
+| `Index` | Abstract index interface, implemented by `HashIndex<K>` and `OrderedIndex<K>` |
+| `Catalog` | All tables, looked up by name |
+| `TokenStream` | Splits input into whitespace separated tokens |
+| `Parser` | Turns tokens into a `Command` |
+| `Planner` | Picks how to run a query (scan vs index) and produces `EXPLAIN` text |
+| `Executor` | Runs a `Command` against the catalog |
+| `ResultWriter` | Handles output formatting and quiet mode |
+| `Session` | The main loop, error recovery, and `-t` timing |
 
-## 2. Front end: parse and bind in one pass
+## Parser
 
-The language is token based, not line based: `INSERT` rows follow on later lines, and a command
-may be split across lines. Two rules are line based, though:
+The parser checks table and column names as it reads, instead of leaving that to the executor. It has to, because how a value is parsed depends on the column it belongs to (`3` is an int in one column and a double in another), and `INSERT` needs to know how many columns the table has to know how many tokens make up a row. So by the time a `Command` reaches the executor, every name has already been turned into a column position and every literal into a typed `Value`.
 
-* Error recovery prints one message and discards **the rest of the current line**. Whatever was
-  on later lines is read as new commands. This is observable: after
-  `INSERT INTO missing 2 ROWS`, both row lines are reported as `Error: unrecognized command`.
-* `AGGREGATE`'s optional `GROUP BY` / `WHERE` clauses must be on the command's own line, so the
-  parser can tell "no more clauses" from "the next command" (`TokenStream::hasMoreOnLine`). A
-  `#` there starts a comment and ends the clauses, exactly as a trailing comment after any other
-  command is read as the next (comment) command.
+`Command` is a `std::variant` of plain structs (`CreateCmd`, `InsertCmd`, `PrintCmd`, `JoinCmd`, `AggregateCmd`, etc.). The executor handles them with `std::visit`, so if a new command is added and not handled, it's a compile error instead of a silently missing `else if`.
 
-Because of the first rule, *where* an error is detected is part of the behaviour. The original
-read each command's fixed-length header with one chain of `>>` extractions before checking any
-of it (`JOIN` reads all ten tokens `t1 AND t2 WHERE c1 = c2 AND PRINT N` first), and checked the
-variable-length parts (column lists, the `WHERE` value) as it read them. The `Parser` does the
-same: `readHeader<N>()` reads the header, then checks keywords, then table names, then column
-names, then operators and counts. A header split across lines therefore loses only the rest of
-the line it ends on, never its continuation lines. A golden test (`multiline_headers`) and a
-randomized differential run against the original binary with headers split at random points
-check this.
-
-The parser must also know the schema while it reads: literal syntax is type directed (`3` is an
-int in one column and a double in another) and `INSERT` needs the table's width to know how many
-tokens form a row. The `Parser` therefore binds as it goes: names are resolved against the
-catalog, literals are parsed by their column's type, and the resulting `Command` holds column
-positions and typed `Value`s. The executor never sees an unresolved name.
-
-`Command` is a closed `std::variant` of plain structs (`CreateCmd`, `InsertCmd`, `PrintCmd`,
-`DeleteCmd`, `GenerateCmd`, `JoinCmd`, `RemoveCmd`, `AggregateCmd`, `LoadCmd`, `ExplainCmd`,
-`QuitCmd`, `CommentCmd`). The executor dispatches with `std::visit` over an overload set, so a
-new command that is not handled is a compile error rather than a missed `else if`.
+Each command reads its whole fixed header (for example `FROM <table> WHERE <col> <op>`) before checking any of it. This matches how the original version read input, so error recovery skips exactly the same tokens it used to, even when a command is split across lines.
 
 ### Errors
 
-```
-std::runtime_error
-├── SqlError                      recoverable: print what(), skip rest of line, continue
-│   ├── UnknownCommandError       "Error: unrecognized command"
-│   ├── TableNotFoundError        "Error during PRINT: t does not name a table in the database"
-│   ├── ColumnNotFoundError       "Error during PRINT: c does not name a column in t"
-│   ├── TableExistsError          "Error during CREATE: Cannot create already existing table t"
-│   ├── SyntaxError               "Error during JOIN: Expected =, found =="
-│   ├── SemanticError             "Error during CREATE: Invalid column type float"
-│   └── LoadError                 "Error during LOAD: Line 3: 'x' is not a valid int value ..."
-├── InputError                    fatal: "Error: Reading from cin has failed" on stderr, exit 1
-└── UsageError                    fatal: "Error: Unknown command line option" on stderr, exit 1
-std::logic_error
-└── TypeMismatchError             programming error (e.g. ordering an int against a string)
-```
-
-`what()` is always the complete user-facing line, so the `Session` catch block is three lines.
-`InputError` covers what the original treated as a stream failure: input ending before `QUIT`
-and a token that cannot be read as the number the grammar requires. Literals follow stream
-extraction's rules exactly (`literal.hpp`): `std::from_chars` does the parsing, plus the two
-places where it differs from `operator>>`: a leading `+` is accepted, and a double too small to
-represent (`1e-400`) reads as a signed zero instead of failing.
-
-## 3. Storage: columnar tables
-
-The original stored rows as `vector<vector<Field>>`, where `Field` was a tagged union. A filter on
-one attribute walked every row's heap-allocated vector and dispatched on the tag of every cell.
-
-`Table` instead keeps one `Column` per attribute, and a `Column` is
-`std::variant<vector<int32_t>, vector<double>, vector<uint8_t>, vector<std::string>>`. This is
-the column-store layout used by analytical engines and kdb+-style tick databases:
-
-* **Bytes touched.** `WHERE price < 500` reads only the price column: 8 bytes per row in one
-  contiguous array, every byte of every 64-byte cache line useful, and a sequential access
-  pattern the hardware prefetcher follows. A row layout drags whole rows (and their heap
-  indirections) through the cache to look at one field.
-* **No per-cell dispatch.** The type check happens once per scan (`Column::visit`), not once per
-  cell. Inside, `scanValues<T>` is a template instantiated per element type and per operator
-  (the `switch` on the operator is hoisted out of the loop), so the inner loop is a plain
-  `double < double` compare that the compiler can unroll.
-* **Branch-free selection.** `selectRows` writes every row id into a 1024-entry stack buffer and
-  advances the write cursor by the predicate's 0/1 result. There is no data-dependent branch, so
-  a 50%-selective filter does not pay a misprediction on every other row.
-* **Bools as bytes.** `vector<bool>` is a bit-packed proxy container; one byte per bool keeps the
-  column an ordinary array that the same kernels scan.
-* **32-bit row ids.** `RowId` is `uint32_t`, halving the size of index postings and selection
-  vectors. A table is limited to 2^32 - 1 rows (`Table::append` checks).
-
-The `bench_layout` benchmark separates the two effects on this machine, for a 50%-selective
-filter on 1M rows: a branchy loop over rows of variants (a model of the original layout, each
-cell read with a typed `std::get_if`) takes 8.75 ms; the same branchy loop over the typed column
-3.39 ms (layout: 2.6x); the branch-free kernel on the column 0.59 ms (a further 5.7x, 15x in
-total). See the README.
-
-What columnar costs: reconstructing a whole row touches every column, and appending a row writes
-to N vectors. Both are cheap here because output is formatted cell by cell anyway and inserts
-arrive in batches (`RowBatch`).
-
-### Inserts, deletes and batches
-
-`INSERT` and `LOAD` first build a `RowBatch` (columns of the table's types), validating every
-value, and only then call `Table::append`. A malformed row or CSV file therefore never reaches
-the table. `Table::append` itself gives the strong exception guarantee:
-
-1. `Column::reserveFor` allocates room in every column first (growing capacity geometrically, so
-   a stream of one-row `INSERT`s stays amortised O(1) per row). This is the only step that can
-   fail, and it changes nothing visible.
-2. `Column::appendFrom` then moves the batch in, which cannot throw. A column that has never
-   allocated (a new table) simply adopts the batch's buffer, so the first `INSERT` or `LOAD` into
-   a table costs O(1) per column instead of moving every element.
-3. If extending the index throws (`bad_alloc`), the index forgets the new rows
-   (`Index::truncate`) and the columns are truncated back, so the table is exactly as before.
-
-`DELETE` selects the doomed row ids, builds one keep-mask (`vector<uint8_t>`) and compacts every
-column with it in a single stable pass (`Column::compact`), so surviving rows keep their
-relative order. Everything that allocates (the mask, the index's renumbering table) is built
-before the first column changes.
-
-## 4. Indexes: runtime polymorphism outside, templates inside
-
-`Index` is an abstract base class (`kind`, `name`, `column`, `supports`, `lookup`, `extend`,
-`renumber`, `truncate`, `distinctKeys`), owned by the table through `std::unique_ptr<Index>`. The
-index kind is chosen at runtime by `GENERATE`, so virtual dispatch is the natural fit at the
-table boundary. A filtered read makes one virtual `lookup` call per query; maintenance makes one
-call per `INSERT`/`LOAD`/`DELETE`.
-
-The implementations are class templates over the column's storage type:
-
-* `PostingsIndex<Map>` holds the map from key to postings list and implements everything both
-  kinds share: `extend`, `renumber`, `truncate`, `distinctKeys`, and a typed (non-virtual)
-  `equalRange(const Key&)`.
-* `HashIndex<K>`: `PostingsIndex<std::unordered_map<K, std::vector<RowId>>>`, equality only.
-* `OrderedIndex<K>`: `PostingsIndex<std::map<K, std::vector<RowId>>>`, equality and
-  `< <= >= >` (its `lookup` only chooses the `lower_bound`/`upper_bound` pair for the operator).
-
-`makeIndex(kind, type, column)` instantiates the right one through `visitStorageType`, the one
-place where a runtime `ColumnType` selects a template instantiation (it also builds `Column`
-storage and parses typed literals). Keys are stored as raw `int32_t`/`double`/`uint8_t`/
-`std::string`, not as `Value`s, so hashing and comparing involve no variant dispatch, and
-`storageKey<K>(value)` lets `lookup` probe with a reference to the `Value`'s string rather than a
-copy. The join goes further: it recovers the concrete `HashIndex<K>` with one `dynamic_cast` per
-join and probes `equalRange` with the probe column's raw keys, so there is no `Value` and no
-virtual call per row.
-
-**Invariant:** every postings list is in ascending row-id order. Rows are indexed in increasing
-id order, and renumbering preserves relative order. The output-order rules below depend on this.
-
-**Maintenance:** `INSERT`/`LOAD` index only the new rows (`extend`). `DELETE` shifts every
-surviving row down, so it hands the index a renumbering table (`newIds[old]`, or `kNoRow` for a
-deleted row, built once from the keep-mask by a prefix count) and `renumber` rewrites each
-postings list in place, dropping deleted ids and erasing keys left without rows. That is O(n)
-with no allocation. The earlier design rebuilt the index from scratch, reallocating a node and a
-postings vector per key: a single-row `DELETE` on a 1M-row table took about 119 ms with a `bst`
-index and 28 ms with a hash index (medians of 10, `-t`); renumbering takes 15 ms and 9 ms
-(without an index, 0.7 ms). `GENERATE` replaces the previous index (a table has at most one).
-
-**Trade-off: a postings vector per key.** Each distinct key owns a map node and a
-`std::vector<RowId>`. That makes every maintenance operation above simple and incremental, but
-for unique keys it costs roughly 90-100 bytes per row and two dependent pointer loads per probe.
-Denser layouts exist (all postings in one array with per-key offsets, or a sorted
-`vector<pair<Key, RowId>>` for the ordered index), but they turn the common one-row `INSERT` into
-an O(n) merge or rebuild. The temporary join table, which is built once and never updated, does
-use a flat layout (section 5).
-
-## 5. Planner and output order
-
-`planScan` chooses an `AccessPath` for an optional predicate:
-
-| Index on the predicate column | `=` | `< <= >= >` | `!=` |
-|-------------------------------|-----|-------------|------|
-| none / on another column      | full scan | full scan | full scan |
-| hash                          | hash probe | full scan | full scan |
-| bst (ordered)                 | ordered point lookup | ordered range scan | full scan |
-
-The plan borrows the command's predicate (`const Predicate*`) rather than copying its `Value`.
-`executeScan` returns row ids in the order the engine prints them:
-
-* full scan and equality probes: ascending row order;
-* ordered range scan: ascending key order, and row order within a key.
-
-These are exactly the legacy rules (a BST index returned range results in key order), and the
-randomized differential test asserts them for every query.
-
-**Joins.** `JOIN t1 AND t2` iterates `t1` in row order and, for each row, emits the matching
-`t2` rows in ascending row order. If `t2` has a hash index on the join column the join probes
-it; otherwise it builds a temporary hash table over `t2`'s column. That table is laid out flat:
-an `unordered_map<K, RowId>` from each distinct key to its first row, plus one
-`vector<RowId> next` that chains the rows sharing a key (filled from the last row to the first,
-so every chain is in ascending row order). That is one hash node per distinct key and no
-per-key vector, and string keys are `std::string_view`s into the column (which cannot change
-during the join) instead of copies. Compared with the earlier `unordered_map<K, vector<RowId>>`
-this halved the 1M-row join (75 ms to 36 ms).
-
-The original also probed an ordered index when one existed, but `bench_join` shows that
-`O(log n)` pointer-chasing probes into a `std::map` are slower than building a hash table at
-every size measured (0.65 ms vs 0.22 ms at 10k rows; 497 ms vs 36 ms at 1M), so the planner no
-longer probes ordered indexes. Both strategies produce identical output in identical order
-(`test_join.cpp` checks every strategy, including self-joins, against a nested-loop reference
-on random tables with duplicate keys on both sides), so this is invisible except in `EXPLAIN`.
-
-`EXPLAIN` prints the planner's decision without executing:
+Errors are exceptions, and `what()` is always the exact message the user should see.
 
 ```
-Plan: full scan of trades (filter: qty > 100)
-Plan: hash-index probe on symbol (=)
-Plan: ordered-index point lookup on price (=)
-Plan: ordered-index range scan on price (<)
-Plan: hash join probing existing hash index on venues.symbol
-Plan: hash join building temporary hash table on venues.symbol (existing bst index not probed)
+SqlError                  print message, skip rest of the line, keep going
+├── UnknownCommandError
+├── TableNotFoundError
+├── ColumnNotFoundError
+├── TableExistsError
+├── SyntaxError
+├── SemanticError
+└── LoadError
+InputError                fatal, "Error: Reading from cin has failed", exit 1
+UsageError                fatal, "Error: Unknown command line option", exit 1
 ```
 
-## 6. Aggregation
+## Column Storage
 
-`aggregate()` visits the value column once to get its element type `S`, then (for `GROUP BY`)
-visits the group column to get its key type `K`, and accumulates into an
-`unordered_map<K, Accumulator<S>>`: one expected O(1) probe per row instead of an O(log G)
-chain of string comparisons in a tree. Only the G distinct groups are then sorted to print them
-in ascending key order. On 1M rows with 1000 string groups this took `AVG ... GROUP BY` from
-about 85 ms (with `std::map`) to about 19 ms.
+The original version stored rows as `vector<vector<Field>>`, where `Field` was a tagged union. Filtering on one column meant walking every row's separately allocated vector and checking the type of every cell.
 
-* `COUNT` works on any column; `MIN`/`MAX` on any ordered type; `SUM`/`AVG` only on int and
-  double (checked by the parser, so the executor cannot be asked to sum strings).
-* Int sums accumulate in `int64_t` (the test data sums two 2e9 values exactly).
-* Double sums use Neumaier compensated summation (`CompensatedSum`): the error stays
-  `O(epsilon)` instead of growing with the number of terms (`CompensatedSumTest` checks 10M
-  additions of 0.1). Overflow returns infinity instead of NaN.
-* Rows are accumulated in ascending row-id order. An ordered-index range scan returns rows in key
-  order, and floating-point addition is not associative, so without this the same query could
-  print different digits depending on whether an index exists. Every other access path already
-  returns ascending ids, so the sort runs only when `std::is_sorted` says it is needed.
-* Without `GROUP BY` there is always one result row: `COUNT` of no rows is `0`, and the other
-  functions are `NULL`, as in SQL.
+Now each `Table` holds one `Column` per attribute, and a `Column` is a `std::variant` of `vector<int32_t>`, `vector<double>`, `vector<uint8_t>`, or `vector<std::string>`. This is the same idea as column-oriented databases and kdb+:
 
-## 7. LOAD (CSV)
+- A query like `WHERE price < 500` only reads the price column, which is one contiguous array. Every byte that gets pulled into cache is actually used, and the access pattern is sequential so the hardware prefetcher keeps up.
+- The type is checked once per scan instead of once per cell. The scan itself is a template (`scanValues<T>`) instantiated per type and operator, so the inner loop is just a plain `double < double` comparison.
+- Selection is branch-free. Every row id gets written into a buffer, and the write position only moves forward when the comparison is true. That avoids a branch misprediction on every other row when about half the rows match.
+- Bools are stored as one byte each, since `vector<bool>` is a bit-packed special case that doesn't work with the same scan code.
+- Row ids are 32-bit (`uint32_t`), which halves the size of index entries.
 
-`readCsv` reads a header line, maps each header name to a table column (any order; every column
-exactly once), then parses each record with a small RFC-4180-style splitter (quoted fields,
-`""` escapes, trimmed blanks, CRLF endings, blank lines skipped). Values go straight into a
-`RowBatch` through the same literal parsers the command language uses (`literal.hpp`), and the
-batch is appended (and indexed) only when the whole file is valid. A string value must be one
-non-empty token without whitespace, the only kind of string the command language can produce,
-print as one cell and match in a `WHERE`; a quoted field may still contain commas. Errors name
-the line number and quote the offending value (`Line 3: '' is not a valid int value for column
-a`), and a path that is not a regular file is reported as `Cannot open file`.
+On a filter that matches about half of 1M rows, the old row layout takes 8.75 ms, the column layout with a normal branchy loop takes 3.39 ms, and the column layout with the branch-free scan takes 0.59 ms.
 
-## 8. Testing strategy
+The downside is that rebuilding a full row touches every column, and inserting a row writes to N vectors. Neither matters much here since output is printed cell by cell anyway and inserts come in batches.
 
-* **Unit tests** (`tests/unit`, one file per component): values, literals, columns, tables, the
-  catalog, the shared index maintenance (`test_postings_index.cpp`, typed over both kinds), each
-  index kind, the token stream, the parser (including every error message and how many tokens
-  each error consumes), the planner, scan kernels, joins, aggregation, CSV loading, the result
-  writer, the executor, the session (including timing with a slow input stream), and CLI parsing.
-* **Randomized differential tests** (`test_differential.cpp`, 20 fixed seeds x 400 operations)
-  apply the same random inserts, deletes, index changes and queries over int, string, double
-  and bool columns to a table with no index, one with a hash index and one with an ordered index,
-  and compare each against a naive reference model (as multisets), while also asserting each
-  access path's output order. A second test runs random scripts through the full `Session` with
-  and without `GENERATE` commands. `test_join.cpp` does the same for joins (30 seeds).
-* **Golden tests** (`tests/integration`) run every `cases/*.sql` script through the real binary in
-  verbose and quiet mode and compare stdout byte for byte. The legacy cases' expected files come
-  from the original implementation; the new cases were checked by hand (and the market demo
-  against an independent Python computation). CLI tests check exit codes and stderr.
-* **Sanitizers**: the `asan` preset runs the whole suite under AddressSanitizer and UBSan; CI runs
-  both `release` and `asan`.
+### Inserts and Deletes
+
+`INSERT` and `LOAD` first parse everything into a `RowBatch` and only add it to the table once every value has been checked. So a bad row or a bad CSV file never leaves the table half updated. `Table::append` reserves space in every column before moving anything in, so if it runs out of memory the table is left exactly as it was.
+
+`DELETE` finds the rows to remove, builds one keep-mask, and compacts every column with it in a single pass. Rows that survive keep their original order.
+
+## Indexes
+
+`Index` is an abstract base class, and a `Table` owns its index through a `std::unique_ptr<Index>`. The index type is picked at runtime by `GENERATE`, so a virtual interface makes sense here. It only costs one virtual call per query, not per row.
+
+The two implementations are templates on the column's type:
+
+- `HashIndex<K>` uses `std::unordered_map<K, std::vector<RowId>>` and only answers `=`
+- `OrderedIndex<K>` uses `std::map<K, std::vector<RowId>>` and answers `=`, `<`, `<=`, `>=`, `>`
+
+Both inherit their shared update logic from `PostingsIndex<Map>`. Keys are stored as raw `int`/`double`/`string` values instead of `Value`s, so hashing and comparing don't go through the variant.
+
+When rows are inserted, only the new rows get added to the index. When rows are deleted, every row after them shifts down, so the index gets a table mapping old row ids to new ones and updates its lists in place. An earlier version rebuilt the whole index after every delete. Deleting one row from a 1M row table took 119 ms with a `bst` index that way, and it now takes 15 ms.
+
+The tradeoff is that every distinct key has its own small vector of row ids, which uses more memory than a flat layout. A flat layout would make single row inserts O(n) though, so I kept the vectors.
+
+## Query Planner
+
+For a `WHERE` clause, the planner picks:
+
+| Index on the column | `=` | `<` `<=` `>=` `>` | `!=` |
+|---|---|---|---|
+| none | full scan | full scan | full scan |
+| hash | hash lookup | full scan | full scan |
+| bst | ordered lookup | ordered range scan | full scan |
+
+Full scans and equality lookups return rows in insertion order. Range scans on a `bst` index return rows in key order. These are the same rules as the original version, and the randomized tests check them.
+
+### Joins
+
+`JOIN t1 AND t2` goes through `t1` in row order and, for each row, prints the matching `t2` rows in row order. If `t2` has a hash index on the join column it uses that. Otherwise it builds a temporary hash table that maps each key to its first matching row, plus one `next` array that chains rows with the same key together. String keys are `std::string_view`s into the column instead of copies. That layout cut the 1M row join from 75 ms to 36 ms compared to a map of vectors.
+
+The original version also used a `bst` index for joins when there was one. Benchmarks showed that's slower than just building a hash table at every size (497 ms vs 36 ms at 1M rows), so the planner doesn't do that anymore. The output is the same either way.
+
+## Aggregation
+
+`AGGREGATE` reads the value column once and groups rows with an `unordered_map`. Only the distinct groups are sorted at the end so they print in key order. Switching from `std::map` to `unordered_map` took a 1M row `GROUP BY` from about 85 ms to 19 ms.
+
+- `SUM` and `AVG` only work on int and double columns, and the parser checks that
+- Int sums use `int64_t` so they don't overflow
+- Double sums use Neumaier (compensated) summation so the rounding error doesn't grow with the number of rows
+- Rows are always added up in row order, even when an index returns them in key order, so the result doesn't change depending on which index exists
+
+## CSV Loading
+
+`LOAD` reads a header row, matches each header name to a table column (in any order), and then parses each line. It supports quoted fields and `""` escapes. Values go through the same parsing code as the command language, and nothing is added to the table unless the whole file is valid. Errors include the line number and the bad value.
+
+## Testing
+
+- **Unit tests** (`tests/unit`): one file per class, covering values, columns, tables, both index types, the parser and all its error messages, the planner, scans, joins, aggregation, CSV loading, and the CLI
+- **Randomized tests**: run the same random inserts, deletes, and queries against a table with no index, a hash index, and a bst index, and compare all three to a simple reference implementation. Joins are checked the same way against a nested loop join.
+- **Integration tests** (`tests/integration`): run each `.sql` script through the real executable in normal and quiet mode and compare the output byte for byte. The expected output for the original test cases came from the original version.
+- Everything also runs under AddressSanitizer and UBSan, locally with `make asan` and in CI.
