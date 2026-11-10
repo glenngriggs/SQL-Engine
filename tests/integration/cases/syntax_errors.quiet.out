@@ -1,0 +1,16 @@
+% % % New table t with column(s) a created
+% Error during INSERT: Expected INTO, found TO
+% Error during INSERT: Expected ROWS, found RECORDS
+% Error during PRINT: Expected FROM, found t
+% Error during PRINT: Expected ALL or WHERE, found SOME
+% Error during DELETE: Expected WHERE, found a
+% Error during GENERATE: Expected FOR, found ON
+% Error during GENERATE: Expected INDEX, found IDX
+% Error during JOIN: Expected AND, found OR
+% Error during JOIN: Expected =, found ==
+% Error during JOIN: Expected AND, found OR
+% Error during LOAD: Expected INTO, found TO
+% Error during LOAD: Expected FROM, found AT
+% Added 2 rows to t from position 0 to 1
+% Printed 2 matching rows from t
+% Thanks for being silly!

@@ -1,0 +1,13 @@
+% % New table rebuilt with column(s) id name created
+% Added 3 rows to rebuilt from position 0 to 2
+% Generated hash index for table rebuilt on column id, with 3 distinct keys
+% Deleted 3 rows from rebuilt
+% id name 
+Printed 0 matching rows from rebuilt
+% Added 2 rows to rebuilt from position 0 to 1
+% id name 
+4 D 
+5 E 
+Printed 2 matching rows from rebuilt
+% Table rebuilt removed
+% Thanks for being silly!

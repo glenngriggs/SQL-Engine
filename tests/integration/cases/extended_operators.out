@@ -1,0 +1,109 @@
+% % New table quotes with column(s) symbol price size firm created
+% Added 8 rows to quotes from position 0 to 7
+% symbol price size 
+AAPL 190.5 100 
+AAPL 189.75 200 
+NVDA 131.5 500 
+NVDA 130.25 400 
+AAPL 190.5 300 
+GOOG 171 100 
+Printed 6 matching rows from quotes
+% symbol price size 
+AAPL 190.5 100 
+MSFT 420.25 300 
+MSFT 419.5 100 
+AAPL 190.5 300 
+Printed 4 matching rows from quotes
+% symbol size 
+MSFT 300 
+NVDA 500 
+MSFT 100 
+NVDA 400 
+GOOG 100 
+Printed 5 matching rows from quotes
+% symbol firm 
+MSFT false 
+NVDA false 
+NVDA false 
+AAPL false 
+Printed 4 matching rows from quotes
+% Generated hash index for table quotes on column symbol, with 4 distinct keys
+% symbol size 
+MSFT 300 
+NVDA 500 
+MSFT 100 
+NVDA 400 
+GOOG 100 
+Printed 5 matching rows from quotes
+% symbol size 
+MSFT 300 
+NVDA 500 
+MSFT 100 
+NVDA 400 
+Printed 4 matching rows from quotes
+% symbol size 
+AAPL 100 
+AAPL 200 
+AAPL 300 
+Printed 3 matching rows from quotes
+% Generated bst index for table quotes on column price, with 7 distinct keys
+% symbol price size 
+NVDA 130.25 400 
+NVDA 131.5 500 
+GOOG 171 100 
+AAPL 189.75 200 
+AAPL 190.5 100 
+AAPL 190.5 300 
+Printed 6 matching rows from quotes
+% symbol price size 
+AAPL 190.5 100 
+AAPL 190.5 300 
+MSFT 419.5 100 
+MSFT 420.25 300 
+Printed 4 matching rows from quotes
+% symbol price size 
+MSFT 420.25 300 
+AAPL 189.75 200 
+NVDA 131.5 500 
+MSFT 419.5 100 
+NVDA 130.25 400 
+GOOG 171 100 
+Printed 6 matching rows from quotes
+% symbol price size 
+AAPL 190.5 100 
+AAPL 190.5 300 
+Printed 2 matching rows from quotes
+% symbol price size 
+NVDA 130.25 400 
+Printed 1 matching rows from quotes
+% symbol price size 
+MSFT 419.5 100 
+MSFT 420.25 300 
+Printed 2 matching rows from quotes
+% Deleted 3 rows from quotes
+% symbol price size 
+MSFT 420.25 300 
+AAPL 189.75 200 
+NVDA 131.5 500 
+NVDA 130.25 400 
+AAPL 190.5 300 
+Printed 5 matching rows from quotes
+% Deleted 1 rows from quotes
+% symbol price size 
+NVDA 130.25 400 
+NVDA 131.5 500 
+AAPL 189.75 200 
+AAPL 190.5 300 
+Printed 4 matching rows from quotes
+% Deleted 2 rows from quotes
+% symbol price size 
+NVDA 131.5 500 
+NVDA 130.25 400 
+Printed 2 matching rows from quotes
+% Error during PRINT: Invalid comparison operator ~
+% Error during DELETE: Invalid comparison operator =>
+% symbol 
+NVDA 
+NVDA 
+Printed 2 matching rows from quotes
+% Thanks for being silly!

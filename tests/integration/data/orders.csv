@@ -1,0 +1,7 @@
+trader,id,urgent,notional
+smith,1,true,1500.5
+"lee",2,false,250
+  jones , 3 , true , 99.95
+
+"o""brien",4,false,1e6
+lee,5,true,-12.5

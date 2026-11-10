@@ -1,0 +1,16 @@
+% % New table test with column(s) word count created
+% Added 2 rows to test from position 0 to 1
+% Error: unrecognized command
+% Error: unrecognized command
+% Error: unrecognized command
+% New table another with column(s) id tag created
+% Added 1 rows to another from position 0 to 0
+% Error: unrecognized command
+% Printed 0 rows from joining test to another
+% Printed 2 matching rows from test
+% Deleted 1 rows from test
+% Error: unrecognized command
+% Printed 1 matching rows from test
+% Table another removed
+% Table test removed
+% Thanks for being silly!

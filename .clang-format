@@ -1,0 +1,22 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+ColumnLimit: 100
+IndentWidth: 2
+DerivePointerAlignment: false
+PointerAlignment: Left
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Third-party headers (gtest, benchmark).
+  - Regex: '^<(gtest|benchmark)/'
+    Priority: 2
+  # Standard library.
+  - Regex: '^<[a-z_]+>$'
+    Priority: 3
+  # Project headers.
+  - Regex: '^"'
+    Priority: 4
+...

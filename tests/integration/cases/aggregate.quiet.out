@@ -1,0 +1,32 @@
+% % New table fills with column(s) symbol side qty price maker created
+% Added 10 rows to fills from position 0 to 9
+% Aggregated 10 rows from fills
+% Aggregated 10 rows from fills
+% Aggregated 10 rows from fills
+% Aggregated 10 rows from fills
+% Aggregated 10 rows from fills
+% Aggregated 10 rows from fills
+% Aggregated 10 rows from fills
+% Aggregated 10 rows from fills
+% Aggregated 6 rows from fills
+% Aggregated 5 rows from fills
+% Aggregated 0 rows from fills
+% Aggregated 0 rows from fills
+% Aggregated 0 rows from fills
+% Aggregated 0 rows from fills
+% Generated bst index for table fills on column price, with 10 distinct keys
+% Aggregated 7 rows from fills
+% Aggregated 8 rows from fills
+% Error during AGGREGATE: SUM requires an int or double column, but symbol is string
+% Error during AGGREGATE: AVG requires an int or double column, but maker is bool
+% Error during AGGREGATE: Invalid aggregate function MEDIAN
+% Error during AGGREGATE: nope does not name a column in fills
+% Error during AGGREGATE: nope does not name a table in the database
+% Error during AGGREGATE: nope does not name a column in fills
+% Error during AGGREGATE: Expected BY, found side
+% Error during AGGREGATE: Unexpected token extra
+% Error during AGGREGATE: Unexpected token ORDER
+% Error during AGGREGATE: Unexpected token GROUP
+% Aggregated 10 rows from fills
+% Aggregated 10 rows from fills
+% % Thanks for being silly!

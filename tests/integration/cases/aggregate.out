@@ -1,0 +1,83 @@
+% % New table fills with column(s) symbol side qty price maker created
+% Added 10 rows to fills from position 0 to 9
+% COUNT(symbol) 
+10 
+Aggregated 10 rows from fills
+% SUM(qty) 
+4000001750 
+Aggregated 10 rows from fills
+% symbol AVG(price) 
+AAPL 190.5 
+GOOG 171.2 
+MSFT 420 
+NVDA 131.5 
+Aggregated 10 rows from fills
+% side SUM(qty) 
+BUY 4000000550 
+SELL 1200 
+Aggregated 10 rows from fills
+% side MIN(price) 
+BUY 131.25 
+SELL 131.75 
+Aggregated 10 rows from fills
+% MAX(symbol) 
+NVDA 
+Aggregated 10 rows from fills
+% symbol MIN(maker) 
+AAPL false 
+GOOG false 
+MSFT false 
+NVDA false 
+Aggregated 10 rows from fills
+% maker COUNT(qty) 
+false 4 
+true 6 
+Aggregated 10 rows from fills
+% symbol AVG(qty) 
+AAPL 75 
+GOOG 100 
+MSFT 300 
+NVDA 2e+09 
+Aggregated 6 rows from fills
+% side SUM(price) 
+BUY 552.1 
+SELL 610.4 
+Aggregated 5 rows from fills
+% AVG(qty) 
+NULL 
+Aggregated 0 rows from fills
+% COUNT(qty) 
+0 
+Aggregated 0 rows from fills
+% MAX(qty) 
+NULL 
+Aggregated 0 rows from fills
+% symbol SUM(price) 
+Aggregated 0 rows from fills
+% Generated bst index for table fills on column price, with 10 distinct keys
+% AVG(price) 
+250.557 
+Aggregated 7 rows from fills
+% symbol SUM(qty) 
+AAPL 350 
+GOOG 500 
+NVDA 4000000500 
+Aggregated 8 rows from fills
+% Error during AGGREGATE: SUM requires an int or double column, but symbol is string
+% Error during AGGREGATE: AVG requires an int or double column, but maker is bool
+% Error during AGGREGATE: Invalid aggregate function MEDIAN
+% Error during AGGREGATE: nope does not name a column in fills
+% Error during AGGREGATE: nope does not name a table in the database
+% Error during AGGREGATE: nope does not name a column in fills
+% Error during AGGREGATE: Expected BY, found side
+% Error during AGGREGATE: Unexpected token extra
+% Error during AGGREGATE: Unexpected token ORDER
+% Error during AGGREGATE: Unexpected token GROUP
+% COUNT(qty) 
+10 
+Aggregated 10 rows from fills
+% side MAX(price) 
+BUY 420.1 
+SELL 419.9 
+Aggregated 10 rows from fills
+% % Thanks for being silly!

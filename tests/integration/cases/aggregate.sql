@@ -1,0 +1,43 @@
+# AGGREGATE: COUNT, SUM, AVG, MIN, MAX with GROUP BY and WHERE
+CREATE fills 5 string string int double bool symbol side qty price maker
+INSERT INTO fills 10 ROWS
+AAPL BUY 100 190.25 true
+AAPL SELL 200 190.5 false
+MSFT BUY 300 420.1 true
+NVDA BUY 2000000000 131.5 false
+NVDA BUY 2000000000 131.25 true
+MSFT SELL 100 419.9 false
+AAPL BUY 50 190.75 true
+GOOG SELL 400 171.3 false
+NVDA SELL 500 131.75 true
+GOOG BUY 100 171.1 true
+AGGREGATE FROM fills COUNT symbol
+AGGREGATE FROM fills SUM qty
+AGGREGATE FROM fills AVG price GROUP BY symbol
+AGGREGATE FROM fills SUM qty GROUP BY side
+AGGREGATE FROM fills MIN price GROUP BY side
+AGGREGATE FROM fills MAX symbol
+AGGREGATE FROM fills MIN maker GROUP BY symbol
+AGGREGATE FROM fills COUNT qty GROUP BY maker
+AGGREGATE FROM fills AVG qty GROUP BY symbol WHERE side = BUY
+AGGREGATE FROM fills SUM price GROUP BY side WHERE qty <= 200
+AGGREGATE FROM fills AVG qty WHERE price > 1000
+AGGREGATE FROM fills COUNT qty WHERE price > 1000
+AGGREGATE FROM fills MAX qty WHERE price > 1000
+AGGREGATE FROM fills SUM price GROUP BY symbol WHERE price > 1000
+GENERATE FOR fills bst INDEX ON price
+AGGREGATE FROM fills AVG price WHERE price >= 171.1
+AGGREGATE FROM fills SUM qty GROUP BY symbol WHERE price < 200
+AGGREGATE FROM fills SUM symbol
+AGGREGATE FROM fills AVG maker GROUP BY symbol
+AGGREGATE FROM fills MEDIAN price
+AGGREGATE FROM fills COUNT nope
+AGGREGATE FROM nope COUNT qty
+AGGREGATE FROM fills COUNT qty GROUP BY nope
+AGGREGATE FROM fills COUNT qty GROUP side
+AGGREGATE FROM fills COUNT qty WHERE side = BUY extra
+AGGREGATE FROM fills COUNT qty ORDER BY qty
+AGGREGATE FROM fills COUNT qty WHERE side = BUY GROUP BY symbol
+AGGREGATE FROM fills COUNT qty
+AGGREGATE FROM fills MAX price GROUP BY side # a trailing comment, as after any command
+QUIT

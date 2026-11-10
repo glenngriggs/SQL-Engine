@@ -1,0 +1,15 @@
+# Build trees
+/build/
+/cmake-build-*/
+/out/
+CMakeUserPresets.json
+compile_commands.json
+
+# Editors and OS files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Python
+__pycache__/

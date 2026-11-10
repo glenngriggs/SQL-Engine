@@ -1,0 +1,20 @@
+% % New table t with column(s) id x created
+% Added 4 rows to t from position 0 to 3
+% id x 
+1 0 
+2 -0 
+3 4.94066e-324 
+4 2.5 
+Printed 4 matching rows from t
+% id 
+1 
+2 
+Printed 2 matching rows from t
+% Deleted 0 rows from t
+% id x 
+1 0 
+2 -0 
+3 4.94066e-324 
+4 2.5 
+Printed 4 matching rows from t
+% Thanks for being silly!

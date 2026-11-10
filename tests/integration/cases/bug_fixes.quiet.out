@@ -1,0 +1,20 @@
+% % New table t with column(s) id name created
+% Added 2 rows to t from position 0 to 1
+% Error during PRINT: bogus does not name a column in t
+% Printed 2 matching rows from t
+% New table u with column(s) id label created
+% Added 1 rows to u from position 0 to 0
+% Error during JOIN: bogus does not name a column in u
+% Printed 1 rows from joining t to u
+% Error during CREATE: Invalid column type float
+% Error during PRINT: v does not name a table in the database
+% Error during CREATE: Duplicate column name a
+% Error during CREATE: A table needs at least one column
+% New table pairs with column(s) k v created
+% Added 3 rows to pairs from position 0 to 2
+% Printed 5 rows from joining pairs to pairs
+% Added 0 rows to t
+% Error during GENERATE: Invalid index type btree (expected hash or bst)
+% Error during JOIN: Cannot join int column id to string column label
+% Error during JOIN: Invalid table number 3 (expected 1 or 2)
+% Thanks for being silly!

@@ -1,0 +1,89 @@
+% % New table trades with column(s) ts symbol side price qty created
+% Loaded 200 rows into trades from position 0 to 199
+% Generated bst index for table trades on column price, with 183 distinct keys
+% % Plan: ordered-index range scan on price (<)
+% ts symbol price qty 
+34395794 NVDA 129.02 500 
+34403947 NVDA 129.04 300 
+34401116 NVDA 129.1 1000 
+34404834 NVDA 129.18 100 
+34393140 NVDA 129.4 500 
+34378758 NVDA 129.53 1000 
+Printed 6 matching rows from trades
+% ts symbol price qty 
+34207801 MSFT 423.21 500 
+Printed 1 matching rows from trades
+% % symbol AVG(price) 
+AAPL 189.007 
+AMZN 185.017 
+GOOG 171.911 
+MSFT 420.219 
+NVDA 130.296 
+Aggregated 200 rows from trades
+% side SUM(qty) 
+BUY 34300 
+SELL 31700 
+Aggregated 200 rows from trades
+% symbol COUNT(ts) 
+AAPL 13 
+AMZN 10 
+GOOG 9 
+MSFT 11 
+NVDA 12 
+Aggregated 55 rows from trades
+% Plan: full scan of trades (filter: symbol = NVDA)
+% Generated hash index for table trades on column symbol, with 5 distinct keys
+% Plan: hash-index probe on symbol (=)
+% MAX(price) 
+131.41 
+Aggregated 44 rows from trades
+% side MIN(price) 
+BUY 418.53 
+SELL 418.19 
+Aggregated 52 rows from trades
+% % New table watchlist with column(s) symbol sector created
+% Added 2 rows to watchlist from position 0 to 1
+% Plan: hash join probing existing hash index on trades.symbol
+% sector ts price qty 
+internet 34200090 171.8 1000 
+internet 34213489 171.76 200 
+internet 34214069 171.8 300 
+internet 34221263 172.12 500 
+internet 34232043 172.31 100 
+internet 34233940 172.06 500 
+internet 34237648 171.85 100 
+internet 34240235 172.02 1000 
+internet 34251108 172.15 500 
+internet 34255737 172.02 300 
+internet 34259477 171.68 100 
+internet 34261856 171.86 1000 
+internet 34265827 171.98 100 
+internet 34281321 171.91 300 
+internet 34292807 171.95 300 
+internet 34297531 172.3 100 
+internet 34300304 172.25 100 
+internet 34302031 172.3 100 
+internet 34313846 172.53 300 
+internet 34315748 172.61 500 
+internet 34316922 172.42 1000 
+internet 34318440 172.48 100 
+internet 34323777 172.52 100 
+internet 34328759 171.88 100 
+internet 34334091 171.58 100 
+internet 34340729 171.44 1000 
+internet 34350256 171.54 300 
+internet 34359852 171.56 100 
+internet 34374727 171.17 100 
+internet 34377089 171.29 200 
+internet 34382910 170.99 100 
+internet 34386924 171.01 100 
+Printed 32 rows from joining watchlist to trades
+% % Deleted 90 rows from trades
+% symbol SUM(qty) 
+AAPL 12800 
+AMZN 10100 
+GOOG 9200 
+MSFT 10400 
+NVDA 14500 
+Aggregated 110 rows from trades
+% Thanks for being silly!

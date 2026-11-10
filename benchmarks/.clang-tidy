@@ -1,0 +1,5 @@
+---
+InheritParentConfig: true
+# `for (auto _ : state)` is Google Benchmark's loop idiom; the loop variable is intentionally unused.
+Checks: '-clang-analyzer-deadcode.DeadStores'
+...

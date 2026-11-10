@@ -1,0 +1,27 @@
+% % New table quotes with column(s) symbol price size firm created
+% Added 8 rows to quotes from position 0 to 7
+% Printed 6 matching rows from quotes
+% Printed 4 matching rows from quotes
+% Printed 5 matching rows from quotes
+% Printed 4 matching rows from quotes
+% Generated hash index for table quotes on column symbol, with 4 distinct keys
+% Printed 5 matching rows from quotes
+% Printed 4 matching rows from quotes
+% Printed 3 matching rows from quotes
+% Generated bst index for table quotes on column price, with 7 distinct keys
+% Printed 6 matching rows from quotes
+% Printed 4 matching rows from quotes
+% Printed 6 matching rows from quotes
+% Printed 2 matching rows from quotes
+% Printed 1 matching rows from quotes
+% Printed 2 matching rows from quotes
+% Deleted 3 rows from quotes
+% Printed 5 matching rows from quotes
+% Deleted 1 rows from quotes
+% Printed 4 matching rows from quotes
+% Deleted 2 rows from quotes
+% Printed 2 matching rows from quotes
+% Error during PRINT: Invalid comparison operator ~
+% Error during DELETE: Invalid comparison operator =>
+% Printed 2 matching rows from quotes
+% Thanks for being silly!

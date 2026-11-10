@@ -1,0 +1,15 @@
+% % % New table t with column(s) a s created
+% Added 2 rows to t from position 0 to 1
+% Error during JOIN: nope does not name a table in the database
+% Error during GENERATE: nope does not name a table in the database
+% Error during GENERATE: nope does not name a column in t
+% Error during DELETE: nope does not name a table in the database
+% Error during DELETE: nope does not name a column in t
+% Error during INSERT: nope does not name a table in the database
+% Error during PRINT: nope does not name a table in the database
+% Error: unrecognized command
+% Printed 1 matching rows from t
+% Printed 2 rows from joining t to t
+% Generated bst index for table t on column s, with 2 distinct keys
+% Printed 2 matching rows from t
+% Thanks for being silly!

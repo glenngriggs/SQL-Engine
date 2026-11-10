@@ -1,0 +1,21 @@
+% % New table trades with column(s) ts symbol side price qty created
+% Loaded 200 rows into trades from position 0 to 199
+% Generated bst index for table trades on column price, with 183 distinct keys
+% % Plan: ordered-index range scan on price (<)
+% Printed 6 matching rows from trades
+% Printed 1 matching rows from trades
+% % Aggregated 200 rows from trades
+% Aggregated 200 rows from trades
+% Aggregated 55 rows from trades
+% Plan: full scan of trades (filter: symbol = NVDA)
+% Generated hash index for table trades on column symbol, with 5 distinct keys
+% Plan: hash-index probe on symbol (=)
+% Aggregated 44 rows from trades
+% Aggregated 52 rows from trades
+% % New table watchlist with column(s) symbol sector created
+% Added 2 rows to watchlist from position 0 to 1
+% Plan: hash join probing existing hash index on trades.symbol
+% Printed 32 rows from joining watchlist to trades
+% % Deleted 90 rows from trades
+% Aggregated 110 rows from trades
+% Thanks for being silly!

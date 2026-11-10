@@ -1,0 +1,12 @@
+% % New table inventory with column(s) id item in_stock created
+% Added 6 rows to inventory from position 0 to 5
+% Printed 4 matching rows from inventory
+% Printed 12 rows from joining inventory to inventory
+% Generated hash index for table inventory on column item, with 3 distinct keys
+% Printed 12 rows from joining inventory to inventory
+% Generated bst index for table inventory on column id, with 6 distinct keys
+% Printed 6 rows from joining inventory to inventory
+% Deleted 2 rows from inventory
+% Printed 6 rows from joining inventory to inventory
+% Table inventory removed
+% Thanks for being silly!

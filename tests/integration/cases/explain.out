@@ -1,0 +1,40 @@
+% % New table trades with column(s) id symbol price qty created
+% Added 4 rows to trades from position 0 to 3
+% New table venues with column(s) symbol venue created
+% Added 2 rows to venues from position 0 to 1
+% Plan: full scan of trades (no filter)
+% Plan: full scan of trades (filter: qty > 100)
+% Plan: hash join building temporary hash table on venues.symbol
+% Generated hash index for table trades on column symbol, with 3 distinct keys
+% Plan: hash-index probe on symbol (=)
+% Plan: full scan of trades (filter: symbol < AAPL)
+% Plan: hash-index probe on symbol (=)
+% Plan: hash-index probe on symbol (=)
+% Plan: full scan of trades (no filter)
+% Generated bst index for table trades on column price, with 4 distinct keys
+% Plan: ordered-index range scan on price (<)
+% Plan: ordered-index range scan on price (>=)
+% Plan: ordered-index point lookup on price (=)
+% Plan: full scan of trades (filter: price != 190.5)
+% Plan: full scan of trades (filter: symbol = AAPL)
+% Plan: ordered-index range scan on price (>)
+% id price 
+1 190.5 
+2 420.25 
+3 189.75 
+4 131.5 
+Printed 4 matching rows from trades
+% Generated hash index for table venues on column symbol, with 2 distinct keys
+% Plan: hash join probing existing hash index on venues.symbol
+% Generated bst index for table venues on column symbol, with 2 distinct keys
+% Plan: hash join building temporary hash table on venues.symbol (existing bst index not probed)
+% Plan: hash join building temporary hash table on trades.symbol
+% id venue 
+1 XNAS 
+2 XNAS 
+3 XNAS 
+Printed 3 rows from joining trades to venues
+% Error during EXPLAIN: Cannot explain QUIT (expected PRINT, DELETE, JOIN or AGGREGATE)
+% Error during PRINT: nope does not name a table in the database
+% Error during PRINT: nope does not name a column in trades
+% Thanks for being silly!

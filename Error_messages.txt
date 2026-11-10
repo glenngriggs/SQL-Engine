@@ -1,2 +1,0 @@
-Error: Unknown command line option
-Error: Reading from cin has failed

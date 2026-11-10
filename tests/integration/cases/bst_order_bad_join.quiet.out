@@ -1,0 +1,15 @@
+% % New table alpha with column(s) score letter created
+% Added 5 rows to alpha from position 0 to 4
+% Generated bst index for table alpha on column letter, with 5 distinct keys
+% Printed 3 matching rows from alpha
+% Generated hash index for table alpha on column score, with 5 distinct keys
+% Printed 4 matching rows from alpha
+% Deleted 1 rows from alpha
+% Printed 3 matching rows from alpha
+% New table beta with column(s) val word created
+% Added 3 rows to beta from position 0 to 2
+% Printed 2 rows from joining alpha to beta
+% Error during JOIN: score does not name a column in beta
+% Table alpha removed
+% Table beta removed
+% Thanks for being silly!

@@ -1,0 +1,45 @@
+% % New table orders with column(s) id trader notional urgent created
+% Generated hash index for table orders on column trader, with 0 distinct keys
+% Loaded 5 rows into orders from position 0 to 4
+% id trader notional urgent 
+1 smith 1500.5 true 
+2 lee 250 false 
+3 jones 99.95 true 
+4 o"brien 1e+06 false 
+5 lee -12.5 true 
+Printed 5 matching rows from orders
+% id notional 
+2 250 
+5 -12.5 
+Printed 2 matching rows from orders
+% Loaded 2 rows into orders from position 5 to 6
+% id notional 
+2 250 
+5 -12.5 
+7 20.25 
+Printed 3 matching rows from orders
+% Error during LOAD: Cannot open file tests/integration/data/does_not_exist.csv
+% Error during LOAD: File has no header row
+% Error during LOAD: Header column venue does not name a column in orders
+% Error during LOAD: Header lists column id more than once
+% Error during LOAD: Header does not list column notional of orders
+% Error during LOAD: Line 3: 'lots' is not a valid double value for column notional
+% Error during LOAD: Line 2 has 3 fields, expected 4
+% Error during LOAD: Line 2: malformed quoted field
+% Error during LOAD: Line 2: 'kim park' is not a valid string value for column trader
+% Error during LOAD: Line 2: '' is not a valid double value for column notional
+% Error during LOAD: Cannot open file tests/integration/data
+% Loaded 0 rows into orders
+% Error during LOAD: nope does not name a table in the database
+% Error during LOAD: Expected INTO, found ONTO
+% id trader 
+1 smith 
+2 lee 
+3 jones 
+4 o"brien 
+5 lee 
+6 smith 
+7 lee 
+Printed 7 matching rows from orders
+% Generated hash index for table orders on column trader, with 4 distinct keys
+% Thanks for being silly!

@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.preset }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [release, asan]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          g++ --version
+          cmake --version
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }} --parallel "$(nproc)"
+
+      - name: Test
+        run: ctest --preset ${{ matrix.preset }} --parallel "$(nproc)"
+
+      - name: Smoke-run benchmarks
+        if: matrix.preset == 'release'
+        run: ./build/release/bin/sillyql_benchmarks --benchmark_min_time=0.01s --benchmark_filter='/10000$'
+
+  lint:
+    name: clang-format + clang-tidy
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install LLVM 18 tools
+        run: sudo apt-get update && sudo apt-get install -y clang-format-18 clang-tidy-18
+
+      - name: Check formatting
+        run: |
+          find include src apps tests benchmarks -name '*.cpp' -o -name '*.hpp' \
+            | xargs clang-format-18 --dry-run --Werror
+
+      - name: Configure (for compile_commands.json)
+        run: cmake --preset release
+
+      - name: clang-tidy
+        run: |
+          find src apps tests/unit benchmarks -name '*.cpp' \
+            | xargs -P "$(nproc)" -n 1 clang-tidy-18 -p build/release --quiet --warnings-as-errors='*'
